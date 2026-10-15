@@ -1,0 +1,27 @@
+{
+  "name": "book-store-details-system",
+  "version": "1.0.0",
+  "description": "Comprehensive Full-Stack Book Store Details & Inventory Management System with Express, MongoDB, and Interactive Web UI",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [
+    "express",
+    "mongoose",
+    "mongodb",
+    "bookstore",
+    "book-details",
+    "rest-api",
+    "inventory-management"
+  ],
+  "author": "Maharshi",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.1"
+  }
+}

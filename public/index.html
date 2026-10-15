@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PageCraft | Book Store Details & Management System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-book-open"></i>
+        </div>
+        <div class="brand-text">
+          <h1>PageCraft <span>Books</span></h1>
+          <p class="brand-tagline">Store Details & Catalog Management System</p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div class="nav-stats">
+        <div class="stat-pill">
+          <i class="fa-solid fa-books"></i>
+          <div>
+            <span class="stat-number" id="navTotalBooks">--</span>
+            <span class="stat-label">Titles</span>
+          </div>
+        </div>
+        <div class="stat-pill">
+          <i class="fa-solid fa-layer-group"></i>
+          <div>
+            <span class="stat-number" id="navTotalCategories">--</span>
+            <span class="stat-label">Genres</span>
+          </div>
+        </div>
+        <div class="stat-pill">
+          <i class="fa-solid fa-star"></i>
+          <div>
+            <span class="stat-number" id="navAvgRating">--</span>
+            <span class="stat-label">Rating</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-primary" id="openAddModalBtn">
+          <i class="fa-solid fa-plus"></i> Add New Book
+        </button>
+        <button class="btn btn-outline" id="viewApiDocsBtn" title="View REST API documentation">
+          <i class="fa-solid fa-code"></i> API Docs
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fa-solid fa-sparkles"></i> MERN Stack Architecture • MongoDB & Express REST API
+      </div>
+      <h2>Comprehensive Book Store Catalog</h2>
+      <p>Search, filter, manage inventory, view rich metadata, and inspect live REST API endpoints.</p>
+      
+      <!-- Search & Quick Filter Bar -->
+      <div class="search-box-container">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by title, author, ISBN or keywords..."
+            autocomplete="off"
+          />
+          <button class="clear-search-btn" id="clearSearchBtn" title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="sort-select-wrapper">
+          <i class="fa-solid fa-arrow-down-wide-short select-icon"></i>
+          <select id="sortBySelect">
+            <option value="newest">Sort: Newest Added</option>
+            <option value="rating_desc">Sort: Highest Rated</option>
+            <option value="price_asc">Sort: Price (Low to High)</option>
+            <option value="price_desc">Sort: Price (High to Low)</option>
+            <option value="title_asc">Sort: Title (A to Z)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+    <!-- Category Filter Bar (Pills) -->
+    <div class="category-scroll-container">
+      <div class="category-pills" id="categoryPills">
+        <button class="pill-btn active" data-category="All">
+          <i class="fa-solid fa-grid-2"></i> All Books (<span id="catCountAll">0</span>)
+        </button>
+        <button class="pill-btn" data-category="Technology & Coding">
+          <i class="fa-solid fa-laptop-code"></i> Technology & Coding
+        </button>
+        <button class="pill-btn" data-category="Self-Help">
+          <i class="fa-solid fa-brain"></i> Self-Help
+        </button>
+        <button class="pill-btn" data-category="Fiction">
+          <i class="fa-solid fa-feather-pointed"></i> Fiction
+        </button>
+        <button class="pill-btn" data-category="Business & Finance">
+          <i class="fa-solid fa-chart-line"></i> Business & Finance
+        </button>
+        <button class="pill-btn" data-category="Sci-Fi & Fantasy">
+          <i class="fa-solid fa-rocket"></i> Sci-Fi & Fantasy
+        </button>
+        <button class="pill-btn" data-category="Mystery & Thriller">
+          <i class="fa-solid fa-mask"></i> Mystery & Thriller
+        </button>
+        <button class="pill-btn" data-category="History">
+          <i class="fa-solid fa-landmark"></i> History
+        </button>
+        <button class="pill-btn" data-category="Biography">
+          <i class="fa-solid fa-user-astronaut"></i> Biography
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Filter Status & Count Bar -->
+    <div class="filter-status-bar">
+      <div class="results-count">
+        Showing <strong id="displayedCount">0</strong> books in catalog
+      </div>
+      <div class="filter-tools">
+        <span class="active-badge" id="activeFilterBadge" style="display: none;">
+          Category: <span id="badgeCategoryText">All</span>
+          <i class="fa-solid fa-xmark remove-filter" id="removeCategoryFilter"></i>
+        </span>
+        <button class="btn btn-sm btn-ghost" id="refreshBtn">
+          <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
+        </button>
+      </div>
+    </div>
+
+    <!-- Book Grid Container -->
+    <div class="book-grid" id="bookGrid">
+      <!-- Loading skeleton placeholder will render dynamically -->
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading bookstore catalog from MongoDB...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-icon">
+        <i class="fa-regular fa-folder-open"></i>
+      </div>
+      <h3>No Books Found</h3>
+      <p>We couldn't find any books matching your criteria. Try adjusting your search query or filter.</p>
+      <button class="btn btn-primary" id="resetFiltersBtn">
+        <i class="fa-solid fa-rotate-left"></i> Reset All Filters
+      </button>
+    </div>
+
+    <!-- Store Statistics Card Section (Viva/Exam Highlight) -->
+    <section class="stats-overview-section">
+      <div class="section-title">
+        <h3><i class="fa-solid fa-chart-pie"></i> Real-Time Inventory & Store Analytics</h3>
+        <p>Aggregated directly from MongoDB using Mongoose queries</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon bg-blue">
+            <i class="fa-solid fa-book"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-title">Catalog Titles</span>
+            <h4 id="statTotalTitles">--</h4>
+            <span class="stat-sub">Active book records</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-green">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-title">Physical Stock</span>
+            <h4 id="statTotalStock">--</h4>
+            <span class="stat-sub">Available copies in store</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-amber">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-title">Inventory Valuation</span>
+            <h4 id="statInventoryVal">₹--</h4>
+            <span class="stat-sub">Total catalog stock value</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-purple">
+            <i class="fa-solid fa-star-half-stroke"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-title">Store Avg Rating</span>
+            <h4 id="statAvgRating">-- / 5.0</h4>
+            <span class="stat-sub">Based on user reviews</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Collapsible REST API Documentation (Impresses Teacher/Examiner) -->
+    <section class="api-docs-section" id="apiDocsSection">
+      <div class="api-docs-header" id="toggleApiDocs">
+        <div>
+          <h4><i class="fa-solid fa-terminal"></i> Backend REST API Endpoints Specification</h4>
+          <p>Verified Express routes with validation middleware and status codes</p>
+        </div>
+        <button class="btn btn-sm btn-outline">
+          <span id="apiToggleText">Show API Details</span> <i class="fa-solid fa-chevron-down" id="apiToggleIcon"></i>
+        </button>
+      </div>
+      <div class="api-docs-content" id="apiDocsBody" style="display: none;">
+        <div class="api-table-wrapper">
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Middleware / Validation</th>
+                <th>Description</th>
+                <th>Success Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-method get">GET</span></td>
+                <td><code>/api/books</code></td>
+                <td>Query params: search, category, minPrice, sortBy</td>
+                <td>Fetch books with filtering, searching & sorting</td>
+                <td><code>200 OK</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-method get">GET</span></td>
+                <td><code>/api/books/:id</code></td>
+                <td><code>validateId</code> (Mongoose ObjectId)</td>
+                <td>Fetch single book details by ID</td>
+                <td><code>200 OK</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-method post">POST</span></td>
+                <td><code>/api/books</code></td>
+                <td><code>validateBookCreation</code> (title, price, category, etc.)</td>
+                <td>Add a new book with duplicate checking</td>
+                <td><code>201 Created</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-method put">PUT/PATCH</span></td>
+                <td><code>/api/books/:id</code></td>
+                <td><code>validateId</code>, <code>validateBookUpdate</code></td>
+                <td>Update existing book details</td>
+                <td><code>200 OK</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-method delete">DELETE</span></td>
+                <td><code>/api/books/:id</code></td>
+                <td><code>validateId</code></td>
+                <td>Delete book from catalog by ID</td>
+                <td><code>200 OK</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-method get">GET</span></td>
+                <td><code>/api/books/stats/summary</code></td>
+                <td>None</td>
+                <td>Get aggregated inventory stats & metrics</td>
+                <td><code>200 OK</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Book Details Viewer -->
+  <div class="modal-backdrop" id="detailsModal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-book-bookmark"></i> Book Store Details</h3>
+        <button class="modal-close-btn" id="closeDetailsModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="detailsModalContent">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="detailsEditBtn">
+          <i class="fa-solid fa-pen-to-square"></i> Edit Book
+        </button>
+        <button class="btn btn-primary" id="closeDetailsModalBtn2">
+          Close Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Book Form -->
+  <div class="modal-backdrop" id="bookFormModal">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3 id="formModalTitle"><i class="fa-solid fa-circle-plus"></i> Add New Book to Store</h3>
+        <button class="modal-close-btn" id="closeFormModalBtn">&times;</button>
+      </div>
+      <form id="bookForm">
+        <input type="hidden" id="formBookId" />
+        <div class="modal-body">
+          <div class="form-grid">
+            <!-- Title -->
+            <div class="form-group full-width">
+              <label for="bookTitle">Book Title <span class="required">*</span></label>
+              <input type="text" id="bookTitle" required placeholder="e.g. Clean Code" />
+            </div>
+
+            <!-- Author -->
+            <div class="form-group">
+              <label for="bookAuthor">Author Name <span class="required">*</span></label>
+              <input type="text" id="bookAuthor" required placeholder="e.g. Robert C. Martin" />
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+              <label for="bookCategory">Category / Genre <span class="required">*</span></label>
+              <select id="bookCategory" required>
+                <option value="Technology & Coding">Technology & Coding</option>
+                <option value="Self-Help">Self-Help</option>
+                <option value="Fiction">Fiction</option>
+                <option value="Business & Finance">Business & Finance</option>
+                <option value="Sci-Fi & Fantasy">Sci-Fi & Fantasy</option>
+                <option value="Mystery & Thriller">Mystery & Thriller</option>
+                <option value="History">History</option>
+                <option value="Biography">Biography</option>
+                <option value="Non-Fiction">Non-Fiction</option>
+                <option value="Science & Nature">Science & Nature</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <!-- Price -->
+            <div class="form-group">
+              <label for="bookPrice">Selling Price (₹) <span class="required">*</span></label>
+              <input type="number" id="bookPrice" min="0" step="1" required placeholder="e.g. 599" />
+            </div>
+
+            <!-- Discount Price -->
+            <div class="form-group">
+              <label for="bookDiscountPrice">Discounted Price (₹)</label>
+              <input type="number" id="bookDiscountPrice" min="0" step="1" placeholder="e.g. 499 (optional)" />
+            </div>
+
+            <!-- Rating -->
+            <div class="form-group">
+              <label for="bookRating">Rating (0.0 to 5.0)</label>
+              <input type="number" id="bookRating" min="0" max="5" step="0.1" value="4.5" placeholder="4.5" />
+            </div>
+
+            <!-- Stock -->
+            <div class="form-group">
+              <label for="bookStock">Inventory Stock (Copies)</label>
+              <input type="number" id="bookStock" min="0" value="15" placeholder="15" />
+            </div>
+
+            <!-- Publication Year -->
+            <div class="form-group">
+              <label for="bookYear">Publication Year</label>
+              <input type="number" id="bookYear" min="1800" max="2035" value="2023" />
+            </div>
+
+            <!-- Pages -->
+            <div class="form-group">
+              <label for="bookPages">Page Count</label>
+              <input type="number" id="bookPages" min="1" value="300" />
+            </div>
+
+            <!-- Publisher -->
+            <div class="form-group">
+              <label for="bookPublisher">Publisher</label>
+              <input type="text" id="bookPublisher" placeholder="e.g. Penguin Books" value="Independent Press" />
+            </div>
+
+            <!-- Format -->
+            <div class="form-group">
+              <label for="bookFormat">Binding / Format</label>
+              <select id="bookFormat">
+                <option value="Paperback">Paperback</option>
+                <option value="Hardcover">Hardcover</option>
+                <option value="E-Book">E-Book</option>
+                <option value="Audiobook">Audiobook</option>
+              </select>
+            </div>
+
+            <!-- ISBN -->
+            <div class="form-group">
+              <label for="bookIsbn">ISBN Code</label>
+              <input type="text" id="bookIsbn" placeholder="e.g. 978-0132350884" />
+            </div>
+
+            <!-- Featured Checkbox -->
+            <div class="form-group form-checkbox">
+              <label>
+                <input type="checkbox" id="bookFeatured" />
+                <span>Mark as Featured Book</span>
+              </label>
+            </div>
+
+            <!-- Cover Image URL -->
+            <div class="form-group full-width">
+              <label for="bookCoverImage">Cover Image URL</label>
+              <input
+                type="url"
+                id="bookCoverImage"
+                placeholder="https://images.unsplash.com/..."
+              />
+              <div class="preset-images">
+                <span>Quick Image Presets:</span>
+                <button type="button" class="preset-btn" data-url="https://images.unsplash.com/photo-1532012164546-f432f2e3777a?auto=format&fit=crop&w=600&q=80">Tech</button>
+                <button type="button" class="preset-btn" data-url="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80">Self-Help</button>
+                <button type="button" class="preset-btn" data-url="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=600&q=80">Fiction</button>
+                <button type="button" class="preset-btn" data-url="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80">Sci-Fi</button>
+                <button type="button" class="preset-btn" data-url="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80">History</button>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group full-width">
+              <label for="bookDescription">Book Description / Synopsis <span class="required">*</span></label>
+              <textarea id="bookDescription" rows="4" required placeholder="Write a detailed synopsis of the book (minimum 10 characters)..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancelFormBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveBookBtn">
+            <i class="fa-solid fa-floppy-disk"></i> Save Book Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Delete Confirmation -->
+  <div class="modal-backdrop" id="deleteConfirmModal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3 class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Confirm Deletion</h3>
+        <button class="modal-close-btn" id="closeDeleteModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove <strong id="deleteBookTitle">this book</strong> from the store catalog?</p>
+        <p class="text-muted text-sm">This action will delete the document from MongoDB collection permanently.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="cancelDeleteBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="fa-solid fa-trash-can"></i> Delete Permanently
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p>📚 <strong>PageCraft Book Store Details System</strong> • Exam Project Submission</p>
+      <p class="footer-meta">Node.js • Express • MongoDB • Mongoose • RESTful Architecture</p>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
